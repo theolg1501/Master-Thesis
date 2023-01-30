@@ -1,6 +1,9 @@
 import math
 import numpy as np
 from geopy import distance
+from matplotlib import pyplot as plt
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
 
 def distance_in_meters(pt1, pt2):
@@ -79,28 +82,116 @@ def longest_distance(list_pts):
 
 
 def stops_on_a_line(pt1, pt2, dist):
-    """Calculate points on a line between pt1 and pt2 with a distance of dist between each stop. From pt1 to pt2"""
+    """Calculate points on a line between pt1 and pt2 with a distance of dist between each stop. From pt1 to pt2
+    stops = stops_on_a_line(pts[1], pts[2], 25)
+    print(stops)"""
     # TODO : verify latitude and longitude for the coherence
     stops_points = []
     dist_between_points = distance_in_meters(pt1, pt2)
     number_of_stops = math.ceil(dist_between_points / dist)
-    dlat = pt2[0] - pt1[0]
-    dlong = pt2[1] - pt1[1]
-    for i in range(1, number_of_stops):
-        stops_points.append((pt1[0]+i*dlat, pt1[1]+i*dlong))
+    dlat = (pt2[0] - pt1[0]) / number_of_stops
+    dlong = (pt2[1] - pt1[1]) / number_of_stops
+    for i in range(0, number_of_stops):
+        stops_points.append((pt1[0] + i * dlat, pt1[1] + i * dlong))
     stops_points.append(pt2)
     return stops_points
 
 
-def create_flight_plan(lop):
-    lenght = len(lop)
-    return lenght
+def sorted_points(list_pts):
+    """Return the list_pts sorted.
+    print(pts)
+    print(all_neighbours(pts))
+    sorted_pts = sorted_points(pts)
+    print(sorted_pts)
+    print(all_neighbours(sorted_pts))"""
+    nb_pts = len(list_pts)
+    neighbours = all_neighbours(list_pts)
+    sorted_list = [list_pts[0], list_pts[neighbours[0][0]]]  # the first point and the closest neighbour
+    i = 1
+    ex_index = [0, neighbours[0][0]]
+    # print('Sorted =', sorted_list)
+    # print('Ex_ind =', ex_index)
+    while i < nb_pts - 1:
+        """We look the neighbours of the point."""
+        # print('i =', i)
+        if list_pts[neighbours[ex_index[i]][0]] == sorted_list[i - 1]:
+            """If the closest neighbour is already on the sorted list, we add the other one."""
+            sorted_list.append(list_pts[neighbours[ex_index[i]][1]])
+            ex_index.append(neighbours[ex_index[i]][1])
+        elif list_pts[neighbours[ex_index[i]][1]] == sorted_list[i - 1]:
+            """If the other neighbour is already on the sorted list, we add the first one."""
+            sorted_list.append(list_pts[neighbours[ex_index[i]][0]])
+            ex_index.append(neighbours[ex_index[i]][0])
+        else:
+            print("Error sorted_point.")
+        # print('Ex_ind =', ex_index)
+        # print('Sorted =', sorted_list)
+        i = i + 1
+    return sorted_list
+
+
+def plot_pts(list_pts, style='solid', color="b", wait=False):
+    x = []
+    y = []
+    for pt in list_pts:
+        x.append(pt[0])
+        y.append(pt[1])
+    plt.plot(x, y, linestyle=style, color=color)
+    if not wait:
+        plt.show()
+
+
+def vectorise(pt1, pt2, dist):
+    max_dist = distance_in_meters(pt1, pt2)
+    vx_lat = dist * (pt2[0] - pt1[0]) / max_dist
+    vx_long = dist * (pt2[1] - pt1[1]) / max_dist
+    vx = [vx_lat, vx_long]
+    vy_lat = - vx_long
+    vy_long = vx_lat
+    vy = [vy_lat, vy_long]
+    return tuple(vx), tuple(vy)
+
+
+def create_flight_plan(list_points, dist):
+    polygon = Polygon(list_points)
+    points_out, dist_max = longest_distance(list_points)
+    pt1 = list_points[points_out[0]]
+    pt2 = list_points[points_out[1]]
+    flight_plan = [pt1]
+    next_point = pt1
+    vx, vy = vectorise(pt1, pt2, dist)
+    while (next_point[1]-pt2[1])**2 + (next_point[0]-pt2[0])**2 > vx[1]**2 + vx[0]**2:  #distance_in_meters(next_point, pt2) > dist
+        while polygon.contains(Point(next_point)):
+            # next_point = next_point + vy
+            flight_plan.append(next_point)
+        # next_point = next_point + vx
+        # vy = (-vy[0], - vy[1])
+        # vy(1) = -vy(0), -vy(1)
+        flight_plan.append(next_point)
+    flight_plan.append(pt2)
+    return flight_plan
 
 
 if __name__ == "__main__":
     """6 points of the drone lab in the EETAC in Castelldefels"""
     pts = [(41.276788, 1.987478), (41.275723, 1.988664), (41.276965, 1.989399),
            (41.276264, 1.989522), (41.277231, 1.988347), (41.276098, 1.987644)]
+
+    sorted_pts = sorted_points(pts)
+    plot_pts(sorted_pts, wait=True)
+
+    fp = create_flight_plan(sorted_pts, 15)
+    plot_pts(fp, style='.', color='r')
+    # stops = stops_on_a_line(sorted_pts[1], sorted_pts[3], 5)
+    # plot_pts(stops, style='-', color='r')
+
+    # print(vectorise(sorted_pts[0], sorted_pts[4], 5))
+
+    # print(np.dot(vectorise(sorted_pts[0], sorted_pts[4], 5)[0], vectorise(sorted_pts[0], sorted_pts[4], 5)[1]))
+
+    # point = Point(stops[3])
+    # polygon = Polygon(pts)
+    # print(polygon.contains(point))
 
     """Test :
     neighbours_of()
@@ -111,5 +202,3 @@ if __name__ == "__main__":
     
     print(longest_distance(points_test))
     """
-
-    print(stops_on_a_line(pts[1], pts[4], 25))
