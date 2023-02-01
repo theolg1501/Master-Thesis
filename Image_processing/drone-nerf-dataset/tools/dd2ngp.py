@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     import sys
 
-    camerasfile = sys.argv[1]
+    camerasfile = sys.argv[1]  #.xml file
     samples = int(sys.argv[2])
 
 
@@ -24,9 +24,9 @@ if __name__ == '__main__':
 
     # Load the cameras file and bring everything into local ENU coordiante system in meters.
     print(f"loading {click.style(camerasfile, fg='yellow', bold=True)}")
-    cameras = util.CamerasXML().read(camerasfile)
+    cameras = util.CamerasXML().read(camerasfile)  # cameras is a CamerasXML type object
 
-    camera_names = sorted(cameras.cameras.keys())
+    camera_names = sorted(cameras.cameras.keys())  # sort cameras(0,1,2...219) by keys, 220 photos total
 
     payload = {
         'frames' : [],
@@ -34,17 +34,18 @@ if __name__ == '__main__':
 
     DOWNSAMPLE = 1.0
 
-    up = np.zeros(3)
+    up = np.zeros(3)  # creat a vector[0. 0. 0.]
     xyzs = []
     frames = []
 
-    for cameraname in camera_names:
+    for cameraname in camera_names:  # loop all sorted keys
 
         camera = cameras.cameras[cameraname]
 
         if not camera.structured:
             continue
 
+        #  sensor sub-class as payload
         payload['fl_x']           = camera.sensor.camera.K[0,0]
         payload['fl_y']           = camera.sensor.camera.K[1,1]
         payload['k1']             = camera.sensor.camera.k1

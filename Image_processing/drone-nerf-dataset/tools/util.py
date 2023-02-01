@@ -6,47 +6,51 @@ import os
 import random
 import pymap3d
 import cv2
-import open3d as o3d
 import numpy as np
 import click
 import json
 from pathlib import Path
+import laspy
 
 
 def rotmat(a, b):
-    a, b = a / np.linalg.norm(a), b / np.linalg.norm(b)
-    v = np.cross(a, b)
-    c = np.dot(a, b)
+    a, b = a / np.linalg.norm(a), b / np.linalg.norm(b) # normalize two matrix(for every element x in matrix X1**2 + X2^2 +... =1)
+    v = np.cross(a, b) # cross product
+    c = np.dot(a, b) # dot product
     s = np.linalg.norm(v)
     kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
     return np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2 + 1e-10))
 
-def closest_point_2_lines(oa, da, ob, db): # returns point closest to both rays of form o+t*d, and a weight factor that goes to 0 if the lines are parallel
+
+def closest_point_2_lines(oa, da, ob,
+                          db):  # returns point closest to both rays of form o+t*d, and a weight factor that goes to 0 if the lines are parallel
     da = da / np.linalg.norm(da)
     db = db / np.linalg.norm(db)
     c = np.cross(da, db)
-    denom = np.linalg.norm(c)**2
+    denom = np.linalg.norm(c) ** 2
     t = ob - oa
     ta = np.linalg.det([t, db, c]) / (denom + 1e-10)
     tb = np.linalg.det([t, da, c]) / (denom + 1e-10)
     if ta > 0: ta = 0
     if tb > 0: tb = 0
-    return (oa+ta*da+ob+tb*db) * 0.5, denom
+    return (oa + ta * da + ob + tb * db) * 0.5, denom
+
 
 def center_attention(frames):
     print("computing center of attention...")
     totw = 0.0
     totp = np.array([0.0, 0.0, 0.0])
     for f in frames:
-        mf = f["transform_matrix"][0:3,:]
+        mf = f["transform_matrix"][0:3, :]
         for g in frames:
-            mg = g["transform_matrix"][0:3,:]
-            p, w = closest_point_2_lines(np.asarray(mf[:,3]).flatten(), np.asarray(mf[:,2]).flatten(), np.asarray(mg[:,3]).flatten(), np.asarray(mg[:,2]).flatten())
+            mg = g["transform_matrix"][0:3, :]
+            p, w = closest_point_2_lines(np.asarray(mf[:, 3]).flatten(), np.asarray(mf[:, 2]).flatten(),
+                                         np.asarray(mg[:, 3]).flatten(), np.asarray(mg[:, 2]).flatten())
             if w > 0.01:
-                totp += p*w
+                totp += p * w
                 totw += w
     totp /= totw
-    print("center of attention: ", totp) # the cameras are looking at totp
+    print("center of attention: ", totp)  # the cameras are looking at totp
     return totp
 
 
@@ -54,6 +58,7 @@ def encode(obj):
     if isinstance(obj, np.ndarray):
         return obj.tolist()
     return json.JSONEncoder.default(self, obj)
+
 
 def undistort(image, camera):
     coefficients = np.array([
@@ -70,7 +75,6 @@ def undistort(image, camera):
     return undistorted
 
 
-
 # some simple class like objects
 LLA = namedtuple('LLA', ['long', 'lat', 'alt'])
 XY = namedtuple('XY', ['x', 'y'])
@@ -83,6 +87,7 @@ Covariance = namedtuple('Covariance', ('labels', 'M'))
 
 class Transform(object):
     """ Object for storing ECEF to ENU transform"""
+
     def __init__(self, origin, R, T, s):
         """
         Args:
@@ -128,8 +133,10 @@ class Transform(object):
         z = z.tolist()
         return [x, y, z]
 
+
 class GCP(object):
     """ Object for storing GCP info """
+
     def __init__(self, _id, label, ref, est, cameras):
         """
         Args:
@@ -152,11 +159,12 @@ class GCP(object):
 
 class CamerasXML(object):
     """ Parses and stores the data in the cameras XML """
+
     def __init__(self):
         self.sensors = {}
         self.cameras = {}
         self.transform = None
-        self.gcps = {}
+        self.gcps = {}  # ground control points
 
     @classmethod
     def read(cls, xml_file):
@@ -212,6 +220,7 @@ class CamerasXML(object):
 
         class Sensor(object):
             """ Simple object to store sensor info """
+
             def __init__(self, _id, _type, label):
                 self.id = _id
                 self.type = _type
@@ -237,7 +246,7 @@ class CamerasXML(object):
 
                 d = self.stddev
                 mask = d != 0
-                d[mask] = 1./d[mask]
+                d[mask] = 1. / d[mask]
                 d = np.repeat(d, self.covar.M.shape[0]).reshape(self.covar.M.shape)
                 dd = d.T * d
                 return dd * self.covar.M
@@ -278,7 +287,7 @@ class CamerasXML(object):
                         height = int(child.get('height', 0))
                         size = XY(width, height)
 
-                # build k matrix
+                # build k : camera calibration matrix(intrinsic)
                 skew = 0
                 if 'skew' in distortion:
                     skew = distortion.pop('skew')
@@ -320,8 +329,10 @@ class CamerasXML(object):
         Parse the camera section of the XML file
         returns a mapping from camera_id (index) to camera data
         """
+
         class Camera(object):
             """ Object for storing the data about an image taken with a camera """
+
             def __init__(self, _id, label, _dir):
                 self.id = _id
                 self.label = label
@@ -439,7 +450,6 @@ class CamerasXML(object):
 
         self.transform = Transform(origin, R, T, s)
 
-
     def parse_gcps(self, root):
         """
         Parses the gcp section of the XML file
@@ -503,21 +513,23 @@ def read_points_as_numpy(filename):
             f.x,
             f.y,
             f.z,
-            f.red   / 256,
+            f.red / 256,
             f.green / 256,
-            f.blue  / 256,
+            f.blue / 256,
         ])
 
         return data.T
+
 
 def read_numpy(filename):
     """ Load and return a numpy.array from file """
     points = np.load(filename)
     try:
-        points = points[ points[:,2].argsort() ]
+        points = points[points[:, 2].argsort()]
     except:
         print("Could not sort")
     return points
+
 
 def read_pointcloud(camerasfile, filename, dont_convert=False):
     """ Convert .las in wgs84 to .npy in enu """
@@ -532,9 +544,10 @@ def read_pointcloud(camerasfile, filename, dont_convert=False):
     Sinv = cameras.transform.Sinv
     T = cameras.transform.T.T
 
-    points[:, :3] = Rinv.dot(Sinv).dot( (ecef - T).T ).T
+    points[:, :3] = Rinv.dot(Sinv).dot((ecef - T).T).T
 
     return points
+
 
 class Projector(object):
     def __init__(self, sensor, pose):
@@ -568,8 +581,6 @@ class Projector(object):
         """ return the up vector """
         return self.pose[0:3, 0].reshape(3).tolist()
 
-
-
     def pose_from_RC(self, C, Rc):
         C = np.array(C)
         R = Rc.T
@@ -578,7 +589,6 @@ class Projector(object):
             np.hstack([R, t.reshape(3, 1)]),
             np.array([0, 0, 0, 1]),
         ])
-
 
 
 class Camera(object):
@@ -604,7 +614,7 @@ class PinholeCamera(Camera):
         return x
 
     def project(self, pose, point, distort=True):
-        p = np.hstack( (point, np.ones((point.shape[0], 1)))).T
+        p = np.hstack((point, np.ones((point.shape[0], 1)))).T
         x = pose * p
         x = x.T
         x = np.asarray(x)
@@ -613,6 +623,7 @@ class PinholeCamera(Camera):
         x = x[:, :2]
         return self.c2i(self.distort(x[:, :2], distort=distort))
         return x
+
 
 class BrownCamera(PinholeCamera):
     def __init__(self, params, K, size):
@@ -636,7 +647,6 @@ class BrownCamera(PinholeCamera):
                 }
 
     def distort(self, x, distort=True):
-
         if not distort:
             return x
         # if points are far outside the camera they colud wrap back into the camera
