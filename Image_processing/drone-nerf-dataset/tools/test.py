@@ -3,18 +3,24 @@ import sys
 from pathlib import Path
 import click
 import util
+from collections import namedtuple
+import pprint
+from xml.etree import ElementTree as ET
 
-camerasfile = sys.argv[1]
-samples = int(sys.argv[2])
 
-print(camerasfile)
-print(samples)
+def read(xml_file):
+    """
+        Parse the cameras.xml given a file name
+        Args:
+            xml_file (str): xml file path
+        """
+    xml = xml_file
+    doc = ET.parse(xml_file)
+    root = doc.getroot()
+    for sensor in root.findall('./sensors/sensor'):
+        print(sensor)
 
-path = Path(camerasfile)
-print(path.parent.absolute())
+    return xml
 
-print(f"loading {click.style(camerasfile, fg='yellow', bold=True)}")
-cameras = util.CamerasXML().read(camerasfile)
 
-camera_names = sorted(cameras.cameras.keys())
-print(np.zeros(3))
+read('doc.xml')

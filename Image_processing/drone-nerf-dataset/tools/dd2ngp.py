@@ -2,7 +2,7 @@
 import random
 import util
 import cv2
-import open3d as o3d
+# import open3d as o3d
 import numpy as np
 import click
 import json
@@ -25,7 +25,6 @@ if __name__ == '__main__':
     # Load the cameras file and bring everything into local ENU coordiante system in meters.
     print(f"loading {click.style(camerasfile, fg='yellow', bold=True)}")
     cameras = util.CamerasXML().read(camerasfile)  # cameras is a CamerasXML type object
-
     camera_names = sorted(cameras.cameras.keys())  # sort cameras(0,1,2...219) by keys, 220 photos total
 
     payload = {
@@ -40,14 +39,19 @@ if __name__ == '__main__':
 
     for cameraname in camera_names:  # loop all sorted keys
 
-        camera = cameras.cameras[cameraname]
+        camera = cameras.cameras[cameraname]  # CamerasXML type object.camaras attribute
 
         if not camera.structured:
             continue
 
-        #  sensor sub-class as payload
+        #  reminder payload is a dict
+        #  first camera is CamerasXML type object
+        #  second camera is attribute of sensor(sub-obj of CamerasXML object)
+        # fx, fy are the focal lengths expressed in pixel units
         payload['fl_x']           = camera.sensor.camera.K[0,0]
         payload['fl_y']           = camera.sensor.camera.K[1,1]
+
+        # k and p are distortion coefficients
         payload['k1']             = camera.sensor.camera.k1
         payload['k2']             = camera.sensor.camera.k2
         payload['p1']             = camera.sensor.camera.p1
@@ -56,13 +60,21 @@ if __name__ == '__main__':
         payload['k4']             = camera.sensor.camera.k4
         payload['k5']             = 0.0
         payload['k6']             = 0.0
+
+        # cx, cy is principal point that is usually at the image center
         payload['cx']             = camera.sensor.camera.K[0,2]
         payload['cy']             = camera.sensor.camera.K[1,2]
+
+        # resolution , pixel numbers
         payload['w']              = camera.sensor.resolution.x
         payload['h']              = camera.sensor.resolution.y
+
+        # FOV hor/ver calculation
         payload['camera_angle_x'] = 2 * np.arctan(0.5 * camera.sensor.resolution.x / camera.sensor.camera.K[0,0])
         payload['camera_angle_y'] = 2 * np.arctan(0.5 * camera.sensor.resolution.y / camera.sensor.camera.K[0,0])
         payload['aabb_scale']     = 1
+
+
 
         pose = np.linalg.inv(camera.project.pose)
         pose = np.asarray(pose)
@@ -71,7 +83,7 @@ if __name__ == '__main__':
         pose = pose[[1,0,2,3],:] # swap y and z
         pose[2,:] *= -1 # flip whole world upside down
 
-        up += pose[0:3,1]
+        up += pose[0:3,1]  #  0-2 rows , 1 column
         xyz = camera.project.position()
         xyzs.append(xyz)
         distance = np.linalg.norm(camera.project.position())

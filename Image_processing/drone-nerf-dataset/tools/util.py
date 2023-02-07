@@ -258,7 +258,7 @@ class CamerasXML(object):
                 Args:
                     node (ElementTree): sensor element tree
                 """
-                sen = cls(node.get('id'), node.get('type'), node.get('label'))
+                sen = cls(node.get('id'), node.get('type'), node.get('label'))  # sen is Sensor obj
 
                 # resolution
                 res = node.find('./resolution')
@@ -320,7 +320,7 @@ class CamerasXML(object):
                 return sen
 
         # loop over all sensors in the list
-        for sensor in root.findall('./chunk/sensors/sensor'):
+        for sensor in root.findall('./sensors/sensor'):
             sen = Sensor.from_elementtree(sensor)
             self.sensors[sen.id] = sen
 
@@ -358,6 +358,7 @@ class CamerasXML(object):
                     sensors (dict): mapping of sensor ids to Sensor objects
                 """
                 label = node.get('label')
+                # c is class C
                 cam = cls(int(c.get('id')), os.path.basename(label), os.path.dirname(label))
 
                 # structured
@@ -417,7 +418,7 @@ class CamerasXML(object):
                 return cam
 
         self.cameras = {}
-        for c in root.findall('./chunk/cameras/camera'):
+        for c in root.findall('./cameras/camera'):
             cam = Camera.from_elementtree(c, self.sensors)
             self.cameras[cam.id] = cam
 
@@ -425,7 +426,7 @@ class CamerasXML(object):
         """ Parses the transform part of the XML file """
         self.transform = None
 
-        transform = root.find('./chunk/transform')
+        transform = root.find('./transform')
 
         # scene is not geo-referenced
         if transform is None:
@@ -443,10 +444,10 @@ class CamerasXML(object):
         s = float(transform.find('./scale').text)
 
         # origin (if it has one)
-        try:
-            origin = LLA(*[float(x) for x in transform.find('./origin').text.split(',')])
-        except ValueError:
-            origin = LLA(0, 0, 0)
+        # try:
+        #     origin = LLA(*[float(x) for x in transform.find('./origin').text.split(',')])
+        # except ValueError:
+        origin = LLA(0, 0, 0)
 
         self.transform = Transform(origin, R, T, s)
 
@@ -500,8 +501,8 @@ class CamerasXML(object):
         self.gcps = {}
 
         markers = {}
-        for g in root.findall('./chunk/markers/marker'):
-            gcp = from_elementtree(g, root.find('./chunk/frames/frame/markers'), self.cameras)
+        for g in root.findall('./markers/marker'):
+            gcp = from_elementtree(g, root.find('./frames/frame/markers'), self.cameras)
             markers[gcp.id] = gcp
 
         self.gcps = markers
@@ -590,7 +591,7 @@ class Projector(object):
             np.array([0, 0, 0, 1]),
         ])
 
-
+#  Define map of different camera type
 class Camera(object):
     def __init__(self, name, K, size):
         self.name = name
