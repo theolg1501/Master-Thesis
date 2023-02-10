@@ -13,12 +13,12 @@ print(polygon.contains(point))
 """
 
 
-def distance_in_meters(pt1, pt2):
-    """ Return the distance in meters between pt1 and pt2.
-    wellington = (-41.32, 174.81)
+def distance_in_meters(point_1, point_2):
+    """ Return the distance in meters between pt1 and pt2."""
+    '''wellington = (-41.32, 174.81)
     salamanca = (40.96, -5.50)
-    print(distance.distance(wellington, salamanca).km)"""
-    return distance.distance(pt1, pt2).m
+    print(distance.distance(wellington, salamanca).km)'''
+    return distance.distance(point_1, point_2).m
 
 
 def distance_from_all(ind_pts, list_pts):
@@ -53,7 +53,7 @@ def neighbours_of(ind_pts, list_pts):
         neighbours = [0, 2]
         first_i = 3
     else:
-        'In that case, our value isnt on the 2 firsts positions so we begin the testing at i = 2'
+        'In that case, our value is not on the 2 firsts positions so we begin the testing at i = 2'
         neighbours = [0, 1]
         first_i = 2
     # print(neighbours)
@@ -93,30 +93,40 @@ def longest_distance(list_pts):
     return points, longest_dist
 
 
-def stops_on_a_line(pt1, pt2, dist):
-    """Calculate points on a line between pt1 and pt2 with a distance of dist between each stop. From pt1 to pt2
-    stops = stops_on_a_line(pts[1], pts[2], 25)
-    print(stops)
-    plot_pts(stops, style='-', color='r')"""
+def stops_on_a_line(point_1, point_2, dist):
+    """Calculate points on a line between pt1 and pt2 with a distance of dist between each stop. From pt1 to pt2."""
+    '''
+    pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
+           (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
+
+    sorted_pts = sorted_points(pts)
+    plot_pts(sorted_pts, style=':', wait=True)
+
+    (i_pt1, i_pt2), d_max = longest_distance(sorted_pts)
+
+    pt1, pt2 = sorted_pts[i_pt1], sorted_pts[i_pt2]
+
+    stops = stops_on_a_line(pt1, pt2, 25)
+    plot_pts(stops, style=':', color='g', wait=False)'''
     # TODO : verify latitude and longitude for the coherence
-    stops_points = []
-    dist_between_points = distance_in_meters(pt1, pt2)
+    stops = []
+    dist_between_points = distance_in_meters(point_1, point_2)
     number_of_stops = math.ceil(dist_between_points / dist)
-    dlat = (pt2[0] - pt1[0]) / number_of_stops
-    dlong = (pt2[1] - pt1[1]) / number_of_stops
+    delta_latitude = (point_2[0] - point_1[0]) / number_of_stops
+    delta_longitude = (point_2[1] - point_1[1]) / number_of_stops
     for i in range(0, number_of_stops):
-        stops_points.append((pt1[0] + i * dlat, pt1[1] + i * dlong))
-    stops_points.append(pt2)
-    return stops_points
+        stops.append((point_1[0] + i * delta_latitude, point_1[1] + i * delta_longitude))
+    stops.append(point_2)
+    return stops
 
 
 def sorted_points(list_pts):
-    """Return the list_pts sorted.
-    print(pts)
+    """Return the list_pts sorted."""
+    '''print(pts)
     print(all_neighbours(pts))
     sorted_pts = sorted_points(pts)
     print(sorted_pts)
-    print(all_neighbours(sorted_pts))"""
+    print(all_neighbours(sorted_pts))'''
     nb_pts = len(list_pts)
     neighbours = all_neighbours(list_pts)
     sorted_list = [list_pts[0], list_pts[neighbours[0][0]]]  # the first point and the closest neighbour
@@ -143,18 +153,34 @@ def sorted_points(list_pts):
     return sorted_list
 
 
-def rectangle_flight_plan(pt1, pt2, d, d_width=None):
-    """Return a list of points in the rectangle {pt1, pt2} with a distance between 2 points of d in the length and
-    d_with in the width.
-    rectangle_fp = rectangle_flight_plan(pt1, pt2, 5, d_width=20)
-    print(rectangle_fp)
-    plot_pts(rectangle_fp, style='-.', color='r')"""
+def rectangle_flight_plan(point_1, point_2, d, d_width=None):
+    """Return two lists of points in the rectangle {pt1, pt2}. First is the flight plan with only the extremity. And
+    the second is the list of stops point. The distance between 2 points is d in the length and d_with in the
+    width."""
+    '''Test : 
+    pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
+           (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
+
+    sorted_pts = sorted_points(pts)
+    plot_pts(sorted_pts, style=':', wait=True)
+
+    pt_0, pt_1, pt_2 = sorted_pts[0], sorted_pts[1], sorted_pts[2]
+    pt_3, pt_4 = sorted_pts[3], sorted_pts[4]
+
+    fp_points, stops_points = rectangle_flight_plan(pt_1, pt_3, 20, 10)
+
+    print('Number of points in the flight plan : ', len(fp_points), '\nNumber of stops points : ', len(stops_points))
+    
+    plot_pts(fp_points, style='-', color='r', wait=True)
+    plot_pts(stops_points, style='--', color='g', wait=False)'''
     d_length = d
     if d_width is None:
         d_width = d
-    corners = [pt1, (pt1[0], pt2[1]), pt2, (pt2[0], pt1[1])]  # The 4 corners.
-    fp = []
+    corners = [point_1, (point_1[0], point_2[1]), point_2, (point_2[0], point_1[1])]  # The 4 corners.
+    flight_points = []
+    stops = []
     if distance_in_meters(corners[0], corners[1]) > distance_in_meters(corners[0], corners[3]):
+
         length_points = stops_on_a_line(corners[0], corners[1], d_length)
         length_points_bis = stops_on_a_line(corners[3], corners[2], d_length)
     else:
@@ -163,12 +189,16 @@ def rectangle_flight_plan(pt1, pt2, d, d_width=None):
     i = 0
     while i < len(length_points):
         if i % 2 == 0:
-            fp += stops_on_a_line(length_points[i], length_points_bis[i], d_width)
+            stops += stops_on_a_line(length_points[i], length_points_bis[i], d_width)
+            flight_points.append(length_points[i])
+            flight_points.append(length_points_bis[i])
         else:
-            fp += stops_on_a_line(length_points_bis[i], length_points[i], d_width)
+            stops += stops_on_a_line(length_points_bis[i], length_points[i], d_width)
+            flight_points.append(length_points_bis[i])
+            flight_points.append(length_points[i])
         i += 1
-        # print(i, 'ème étape, fp =', fp)
-    return fp
+        # print(i, 'rd step, fp =', fp)
+    return flight_points, stops
 
 
 def plot_pts(list_pts, style='solid', color="b", wait=False):
@@ -183,119 +213,23 @@ def plot_pts(list_pts, style='solid', color="b", wait=False):
         plt.show()
 
 
-def point_on_with_x(pt1, pt2, x):
+def point_on_with_x(point_1, point_2, x):
     """Return the point on the segment [pt1, pt2] with the abscissa x."""
-    if not min(pt1[0], pt2[0]) < x < max(pt1[0], pt2[0]):
-        print('No point with this abscissa on this segment.')
-    m = (pt2[1] - pt1[1]) / (pt2[0] - pt1[0])
-    b0 = pt1[1] - m * pt1[0]
+    on_this_segment = True
+    if not min(point_1[0], point_2[0]) < x < max(point_1[0], point_2[0]):
+        on_this_segment = False
+        # print('No point with this abscissa on this segment.')
+    m = (point_2[1] - point_1[1]) / (point_2[0] - point_1[0])
+    b0 = point_1[1] - m * point_1[0]
     y = m * x + b0
     point = x, y
-    return point
+    return on_this_segment, point
 
 
-def point_on_with_vectors(O, u, v, pt1, pt2, x_on_ld):
+def point_on_with_vectors(point_0, vect_u, point_1, point_2, x_on_ld):
     """O, P the 2 points from the longest distance segment. Pt1 and Pt2 the segment of the side. x the abscissa of
     the point on the longest distance."""
-    # pt1_x, pt2_x = pt1[0], pt2[0]  # abscissas of the segment
-    Opt1 = vect(O, pt1)
-    Opt2 = vect(O, pt2)
-    u_norm = math.sqrt(np.dot(u, u))
-    print('u_norm : ', u_norm)
-    print('u in meters :', distance_in_meters(O, add_vect(O, u)))
-    fact = distance_in_meters(O, pt1) / distance_in_meters(O, add_vect(O, u))
-    pt1_u = np.dot(Opt1, u) / u_norm**2
-    pt2_u = np.dot(Opt2, u) / u_norm**2
-    print('pt1_u : ', pt1_u)
-    print('pt2_u : ', pt2_u)
-    pt1_on_ld = add_vect(O, u, pt1_u)
-    pt2_on_ld = add_vect(O, u, pt2_u)
-    print('pt1 on ld :', pt1_on_ld)
-    print('pt2 on ld :', pt2_on_ld)
-    # plot_pts([O, pt1_on_ld, pt1, pt2_on_ld, pt2], color='y', wait=True)
-    '''x_on_segment = pt1[0] + (x_on_ld - pt1_on_ld[0]) * (pt2[0] - pt1[0]) / (pt2_on_ld[0] - pt1_on_ld[0])  
-    # y = y1 + (x-x1)(y2-y1)/(x2-x1)'''
-    print('x on ld : ', x_on_ld)
-
-    frac = (x_on_ld - pt1_on_ld[0]) / (pt2_on_ld[0] - pt1_on_ld[0])
-    # distance_in_meters(pt1_on_ld, point_on_with_x(pt1_on_ld, pt2_on_ld, x_on_ld)) / distance_in_meters(pt1_on_ld, pt2_on_ld)
-    x_on_segment = pt1[0] + frac * (pt2[0] - pt1[0])
-    print(frac)
-    print('x_on_seg:', x_on_segment)
-    return point_on_with_x(pt1, pt2, x_on_segment)
-
-
-def flight_plan(list_pts, d, d_width=None):
-    d_length = d
-    if d_width is None:
-        d_width = d
-    list_pts = sorted_points(list_pts)
-    (x, stop), max_dist = longest_distance(list_pts)
-    # vx, vy = vectorise(pt1, pt2, d_length, d_width=d_width)
-    fp = [x]
-    return fp
-
-
-def vect(pt1, pt2):
-    return pt2[0] - pt1[0], pt2[1] - pt1[1]
-
-
-def vectorise(pt1, pt2, d, d_width=None):
-    """ Return 2 vectors to form our grid."
-    vx, vy = vectorise(pt1, pt2, 20, 5)
-    print(vx, vy)
-    plot_pts([add_vect(pt1, vx), add_vect(pt1, vy)], color='r')"""
-    d_length = d
-    if d_width is None:
-        d_width = d
-    d_max = distance_in_meters(pt1, pt2)
-    # print('d_max =', d_max)
-    # print('d_length =', d_length)
-    # print('d_width =', d_width)
-    dx = (pt2[0] - pt1[0])  # coord
-    dy = (pt2[1] - pt1[1])  # coord
-    norm = math.sqrt(dx ** 2 + dy ** 2)
-    theta = math.atan(dy / dx)
-    print('theta : ', theta)
-    u = d_length * norm * math.cos(theta) / d_max, d_length * norm * math.sin(theta) / d_max
-    v = d_width * norm * (- math.sin(theta)) / d_max, d_width * norm * math.cos(theta) / d_max
-    return u, v
-
-
-def add_vect(pt, vect, nb=1):
-    ptx = pt[0]
-    pty = pt[1]
-    value_x = nb * vect[0]
-    value_y = nb * vect[1]
-    ptx = pt[0] + value_x
-    pty = pt[1] + value_y
-    # for i in range(0, nb):
-    #     ptx += vect[0]
-    #     pty += vect[1]
-    return ptx, pty
-
-
-# def create_flight_plan_old(list_points, dist):
-#     polygon = Polygon(list_points)
-#     points_out, dist_max = longest_distance(list_points)
-#     pt2 = list_points[points_out[1]]
-#     flight_plan = [pt1]
-#     next_point = pt1
-#     vx, vy = vectorise(pt1, pt2, dist)
-#     while (next_point[1]-pt2[1])**2 + (next_point[0]-pt2[0])**2 > vx[1]**2 + vx[0]**2:  #distance_in_meters(next_point, pt2) > dist
-#         while polygon.contains(Point(next_point)):
-#             # next_point = next_point + vy
-#             flight_plan.append(next_point)
-#         # next_point = next_point + vx
-#         # vy = (-vy[0], - vy[1])
-#         # vy(1) = -vy(0), -vy(1)
-#         flight_plan.append(next_point)
-#     flight_plan.append(pt2)
-#     return flight_plan
-
-
-if __name__ == "__main__":
-    """6 points of the drone lab in the EETAC in Castelldefels"""
+    '''Example : 
     pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
            (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
 
@@ -308,45 +242,181 @@ if __name__ == "__main__":
     pt1, pt2 = sorted_pts[i_pt1], sorted_pts[i_pt2]
     print('pt1 & pt2 :', pt1, pt2)
 
-    stops = stops_on_a_line(pt1, pt2, 25)
-    plot_pts(stops, style=':', color='g', wait=True)
+    plot_pts([pt1, pt2], style=':', color='g', wait=True)
+
+    pt_0, pt_1, pt_2, pt_3, pt_4 = sorted_pts[0], sorted_pts[1], sorted_pts[2], sorted_pts[3], sorted_pts[4]
+
+    u, v = vectorise(pt1, pt2, 10, 20)
+
+    plt.axis('equal')
+
+    print('abscissas', pt_1[0], pt_2[0])
+
+    abscissa = 41.276200  # 41.276200
+    print('x =', abscissa)
+
+    pt_on_longest_dist = point_on_with_x(pt1, pt2, abscissa)[1]
+    print('pt_long_dist :', pt_on_longest_dist)
+
+    pt_on_segment_with_x = point_on_with_x(pt_1, pt_2, abscissa)[1]
+    print('pt_segment_with_x :', pt_on_segment_with_x)
+
+    plot_pts([pt_on_longest_dist, pt_on_segment_with_x], color='r', wait=True)
+
+    pt_on_segment_with_vect = point_on_with_vectors(pt1, u, pt_1, pt_2, abscissa)[1]
+    print('pt_segment_with_vect :', pt_on_segment_with_vect)
+
+    plot_pts([pt_on_longest_dist, pt_on_segment_with_vect], color='r', wait=True)'''
+    'Creation of the segments [pt0, pt1] and [pt0, pt2].'
+    seg_pt0_pt1 = vect(point_0, point_1)
+    seg_pt0_pt2 = vect(point_0, point_2)
+    'Definition of the norm of the vector of the plan.'
+    u_norm = math.sqrt(np.dot(vect_u, vect_u))
+    'Proportion of the distance of the segment on the scalar product with the vector, with the norm of the vector.'
+    pt1_u = np.dot(seg_pt0_pt1, vect_u) / u_norm ** 2
+    pt2_u = np.dot(seg_pt0_pt2, vect_u) / u_norm ** 2
+    'Creation of orthogonal projection point of pt1 and pt2.'
+    pt1_on_ld = add_vect(point_0, vect_u, pt1_u)
+    pt2_on_ld = add_vect(point_0, vect_u, pt2_u)  # plot_pts([O, pt1_on_ld, pt1, pt2_on_ld, pt2], color='y', wait=True)
+    'Use of this relation : y = y1 + (x-x1)(y2-y1)/(x2-x1).'
+    directing_coefficient = (x_on_ld - pt1_on_ld[0]) / (pt2_on_ld[0] - pt1_on_ld[0])
+    x_on_segment = point_1[0] + directing_coefficient * (point_2[0] - point_1[0])
+    return point_on_with_x(point_1, point_2, x_on_segment)
+
+
+def create_flight_plan(list_pts, d, d_width=None):
+    """Return two lists, the first one with the different points of the flight plan and the second is the list of all
+    stops needed for the completed photo."""
+    '''Example :
+    pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
+           (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
+
+    sorted_pts = sorted_points(pts)
+    plot_pts(sorted_pts, style=':', wait=True)
+
+    plt.axis('equal')
+
+    fp_points, stops_points = create_flight_plan(pts, 5, 10)
+    print('create_flight_plan() :', len(fp_points), len(stops_points))
+
+    plot_pts(fp_points, style='-', color='r', wait=True)
+    plot_pts(stops_points, style='--', color='g', wait=False)'''
+    d_length = d
+    if d_width is None:
+        d_width = d
+    list_pts = sorted_points(list_pts)
+    neighbours = all_neighbours(list_pts)
+    (start, stop), max_dist = longest_distance(list_pts)
+    first_point = list_pts[start]
+    last_point = list_pts[stop]
+    vect_u, vect_v = vectorise(first_point, last_point, d, d_width)
+    up_segment = start, neighbours[start][0]
+    down_segment = start, neighbours[start][1]
+    flight_points = [first_point]
+    stops = [first_point]
+    for i in range(1, math.ceil(max_dist / d_length)):
+        x = add_vect(first_point, vect_u, i)[0]
+        up_on, point_up = point_on_with_vectors(first_point, vect_u,
+                                                list_pts[up_segment[0]], list_pts[up_segment[1]], x)
+        down_on, point_down = point_on_with_vectors(first_point, vect_u,
+                                                    list_pts[down_segment[0]], list_pts[down_segment[1]], x)
+        if not up_on:
+            '''If the point isn't  on the side of the area. We need to change the up_segment.'''
+            a, b = up_segment
+            if neighbours[b][0] == a:
+                up_next_neighbour = neighbours[b][1]
+            else:
+                up_next_neighbour = neighbours[b][0]
+            up_segment = b, up_next_neighbour
+            up_on, point_up = point_on_with_vectors(first_point, vect_u,
+                                                    list_pts[up_segment[0]], list_pts[up_segment[1]], x)
+        if not down_on:
+            '''If the point isn't  on the side of the area. We need to change the up_segment.'''
+            a, b = down_segment
+            if neighbours[b][0] == a:
+                down_next_neighbour = neighbours[b][1]
+            else:
+                down_next_neighbour = neighbours[b][0]
+            down_segment = b, down_next_neighbour
+            down_on, point_down = point_on_with_vectors(first_point, vect_u,
+                                                        list_pts[down_segment[0]], list_pts[down_segment[1]], x)
+        if i % 2 == 0:
+            stops += stops_on_a_line(point_up, point_down, d_width)
+            flight_points.append(point_up)
+            flight_points.append(point_down)
+        else:
+            stops += stops_on_a_line(point_down, point_up, d_width)
+            flight_points.append(point_down)
+            flight_points.append(point_up)
+    flight_points.append(list_pts[stop])
+    stops.append(list_pts[stop])
+    return flight_points, stops
+
+
+def vect(point_1, point_2):
+    return point_2[0] - point_1[0], point_2[1] - point_1[1]
+
+
+def vectorise(point_1, point_2, d, d_width=None):
+    """Return 2 vectors, u and v to form our orthogonal grid."""
+    '''
+    pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
+           (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
+
+    sorted_pts = sorted_points(pts)
+    plot_pts(sorted_pts, style=':', wait=True)
+
+    (i_pt1, i_pt2), d_max = longest_distance(sorted_pts)
+
+    pt1, pt2 = sorted_pts[i_pt1], sorted_pts[i_pt2]
 
     u, v = vectorise(pt1, pt2, 10, 5)
     print('u & v :', u, v)
     plt.axis('equal')
 
     plot_pts([pt1, add_vect(pt1, u)], color='black', wait=True)
-    plot_pts([pt1, add_vect(pt1, v)], color='black', wait=True)
+    plot_pts([pt1, add_vect(pt1, v)], color='black', wait=False)'''
+    d_length = d
+    if d_width is None:
+        d_width = d
+    distance_max = distance_in_meters(point_1, point_2)
+    # print('d_max =', d_max)
+    # print('d_length =', d_length)
+    # print('d_width =', d_width)
+    dx = (point_2[0] - point_1[0])
+    dy = (point_2[1] - point_1[1])
+    norm = math.sqrt(dx ** 2 + dy ** 2)
+    theta = math.atan(dy / dx)
+    # print('theta : ', theta)
+    vect_u = d_length * norm * math.cos(theta) / distance_max, d_length * norm * math.sin(theta) / distance_max
+    vect_v = d_width * norm * (- math.sin(theta)) / distance_max, d_width * norm * math.cos(theta) / distance_max
+    return vect_u, vect_v
 
-    '''Test find on segment with vector'''
 
-    pt_0, pt_1, pt_2 = sorted_pts[0], sorted_pts[1], sorted_pts[2]
-    pt_3, pt_4 = sorted_pts[3], sorted_pts[4]
-    print('abscissas', pt_1[0], pt_2[0])
+def add_vect(pt, vector, nb=1):
+    """Return the point. After having added nb times the vector."""
+    value_x = nb * vector[0]
+    value_y = nb * vector[1]
+    ptx = pt[0] + value_x
+    pty = pt[1] + value_y
+    # for i in range(0, nb):
+    #     ptx += vect[0]
+    #     pty += vect[1]
+    return ptx, pty
 
-    abscissa = 41.276200
-    print('x =', abscissa)
-    pt_on_longest_dist = point_on_with_x(pt1, pt2, abscissa)
-    print('pt_long_dist :', pt_on_longest_dist)
 
-    pt_on_segment_with_x = point_on_with_x(pt_1, pt_2, abscissa)
-    print('pt_segment_with_x :', pt_on_segment_with_x)
+if __name__ == "__main__":
+    """6 points of the drone lab in the EETAC in Castelldefels"""
+    pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
+           (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
 
-    plot_pts([pt_on_longest_dist, pt_on_segment_with_x], color='r', wait=True)
+    sorted_pts = sorted_points(pts)
+    plot_pts(sorted_pts, style=':', wait=True)
 
-    pt_on_segment_with_vect = point_on_with_vectors(pt1, u, v, pt_1, pt_2, abscissa)
-    print('pt_segment_with_vect :', pt_on_segment_with_vect)
+    plt.axis('equal')
 
-    plot_pts([pt_on_longest_dist, pt_on_segment_with_vect], color='r')
+    fp_points, stops_points = create_flight_plan(pts, 5, 10)
+    print('create_flight_plan() :', len(fp_points), len(stops_points))
 
-    # point_1 = 0, 0
-    # point_on_with_vectors(pt1, u, v, pt_5, pt_4, 1.988434)
-    # pt_on_seg_1 = point_on_with_x(pt_5, pt_4, x_1)
-
-    # pt_1, pt_2 = sorted_pts[1], sorted_pts[2]  # ATTENTION changer les noms
-    # point_2 = point_on_with_vectors(pt1, u, v, pt_1, pt_2, 1.988434)
-    # pt_on_seg_2 = point_on_with_x(pt_1, pt_2, x_2)
-
-    # pt_on_seg_0 = point_on_with_x(pt1, pt2, 1.988434)
-    #
-    # plot_pts([pt_on_seg_0, point_1], color='gray')
+    plot_pts(fp_points, style='-', color='r', wait=True)
+    plot_pts(stops_points, style='--', color='g', wait=False)
