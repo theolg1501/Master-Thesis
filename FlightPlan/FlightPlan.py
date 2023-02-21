@@ -3,15 +3,6 @@ import numpy as np
 from geopy import distance
 from matplotlib import pyplot as plt
 
-"""SandBox : 
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
-
-point = Point(stops[3])
-polygon = Polygon(pts)
-print(polygon.contains(point))
-"""
-
 
 def distance_in_meters(point_1, point_2):
     """ Return the distance in meters between pt1 and pt2."""
@@ -38,43 +29,39 @@ def matrix_of_distances(list_pts):
     return mat
 
 
+def angle_BAC(point_A, point_B, point_C):
+    """Return the angle BAC. Using the cos theorem (c²=a²+b²-2.a.b.cos(alpha))."""
+    if point_A == point_B or point_A == point_C or point_B == point_C:
+        return 0
+    a = distance_in_meters(point_B, point_C)
+    # math.sqrt((point_C[0] - point_B[0]) ** 2 + (point_C[1] - point_B[1]) ** 2)
+    b = distance_in_meters(point_A, point_C)
+    # = math.sqrt((point_A[0] - point_C[0]) ** 2 + (point_A[1] - point_C[1]) ** 2)
+    c = distance_in_meters(point_B, point_A)
+    # math.sqrt((point_B[0] - point_A[0]) ** 2 + (point_B[1] - point_A[1]) ** 2)
+    alpha = math.acos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c))
+    return alpha
+
+
 def neighbours_of(ind_pts, list_pts):
-    """Return the 2 indexes of the closest neighbours of the point with the index ind_pts.
-    The first one is the closest."""
-    dist_from_all = distance_from_all(ind_pts, list_pts)
-    if ind_pts == 0:
-        'In that case our value to test is the first one of the list (index 0), so the 2 first neighbours are the ' \
-        'second and the third (index 1 and 2). We need to begin testing at i = 3 (fourth value).'
-        neighbours = [1, 2]
-        first_i = 3
-    elif ind_pts == 1:
-        'In that case our value to test is the second one (index 1), so the 2 first neighbours are 0 and 2.' \
-        'We need to begin testing at i = 3.'
-        neighbours = [0, 2]
-        first_i = 3
-    else:
-        'In that case, our value is not on the 2 firsts positions so we begin the testing at i = 2'
-        neighbours = [0, 1]
-        first_i = 2
-    # print(neighbours)
-
-    if dist_from_all[neighbours[1]] < dist_from_all[neighbours[0]]:
-        neighbours = [neighbours[1], neighbours[0]]
-    # print(neighbours)
-
-    for i in range(first_i, len(list_pts)):
-        # print("i =", i)
-        '''There we test that we don't take the point as a neighbour of himself. And that '''
-        if dist_from_all[i] != 0:  # Test that we don't take the point as a neighbour
-            if dist_from_all[i] < dist_from_all[neighbours[0]]:
-                "Test that the point i is closer than the first neighbour"
-                neighbours[1] = neighbours[0]
-                neighbours[0] = i
-            else:
-                if dist_from_all[i] < dist_from_all[neighbours[1]]:
-                    neighbours[1] = i
-        # print(neighbours)
-    return neighbours
+    if len(list_pts) <= 2:
+        return 'No neighbours'
+    two_neighbours = [0, 1]
+    angle_neighbours = angle_BAC(list_pts[ind_pts], list_pts[two_neighbours[0]], list_pts[two_neighbours[1]])
+    for i in range(len(list_pts)):
+        '''We're searching for the greatest angle. To have one certain neighbour.'''
+        for j in range(len(list_pts)):
+            angle = angle_BAC(list_pts[ind_pts], list_pts[i], list_pts[j])
+            if angle > angle_neighbours:
+                angle_neighbours = angle
+                two_neighbours = [i, j]
+    vectorial_product = (list_pts[two_neighbours[1]][0] - list_pts[ind_pts][0]) * \
+                        (list_pts[two_neighbours[0]][1] - list_pts[ind_pts][1]) - \
+                        (list_pts[two_neighbours[1]][1] - list_pts[ind_pts][1]) * \
+                        (list_pts[two_neighbours[0]][0] - list_pts[ind_pts][0])
+    if vectorial_product > 0:
+        two_neighbours[0], two_neighbours[1] = two_neighbours[1], two_neighbours[0]
+    return two_neighbours
 
 
 def all_neighbours(list_pts):
@@ -84,49 +71,16 @@ def all_neighbours(list_pts):
     return neighbours
 
 
-def longest_distance(list_pts):
-    """Longest distance between two points. Return the 2 points and the distance."""
-    mat_dist = matrix_of_distances(list_pts)
-    longest_dist = np.max(mat_dist)
-    np_index = np.where(mat_dist == longest_dist)[0]
-    points = np_index.tolist()
-    return points, longest_dist
-
-
-def stops_on_a_line(point_1, point_2, dist):
-    """Calculate points on a line between pt1 and pt2 with a distance of dist between each stop. From pt1 to pt2."""
-    '''
-    pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
-           (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
-
-    sorted_pts = sorted_points(pts)
-    plot_pts(sorted_pts, style=':', wait=True)
-
-    (i_pt1, i_pt2), d_max = longest_distance(sorted_pts)
-
-    pt1, pt2 = sorted_pts[i_pt1], sorted_pts[i_pt2]
-
-    stops = stops_on_a_line(pt1, pt2, 25)
-    plot_pts(stops, style=':', color='g', wait=False)'''
-    # TODO : verify latitude and longitude for the coherence
-    stops = []
-    dist_between_points = distance_in_meters(point_1, point_2)
-    number_of_stops = math.ceil(dist_between_points / dist)
-    delta_latitude = (point_2[0] - point_1[0]) / number_of_stops
-    delta_longitude = (point_2[1] - point_1[1]) / number_of_stops
-    for i in range(0, number_of_stops):
-        stops.append((point_1[0] + i * delta_latitude, point_1[1] + i * delta_longitude))
-    stops.append(point_2)
-    return stops
-
-
 def sorted_points(list_pts):
-    """Return the list_pts sorted."""
-    '''print(pts)
-    print(all_neighbours(pts))
+    """Return the list_pts sorted. Rotational sorting."""
+    '''pts = [(41.275827, 1.987712), (41.277231, 1.988347), (41.275716, 1.988816),
+           (41.276965, 1.989399), (41.276264, 1.989522), (41.276788, 1.987478)]  #
+    for i, point in enumerate(pts):
+        plt.text(point[0], point[1], str(i))
+    plt.axis('equal')
+    plot_pts(pts, style='-', color='y', wait=True)
     sorted_pts = sorted_points(pts)
-    print(sorted_pts)
-    print(all_neighbours(sorted_pts))'''
+    plot_pts(sorted_pts, style=':', color='b', wait=True)'''
     nb_pts = len(list_pts)
     neighbours = all_neighbours(list_pts)
     sorted_list = [list_pts[0], list_pts[neighbours[0][0]]]  # the first point and the closest neighbour
@@ -136,17 +90,8 @@ def sorted_points(list_pts):
     # print('Ex_ind =', ex_index)
     while i < nb_pts - 1:
         """We look the neighbours of the point."""
-        # print('i =', i)
-        if list_pts[neighbours[ex_index[i]][0]] == sorted_list[i - 1]:
-            """If the closest neighbour is already on the sorted list, we add the other one."""
-            sorted_list.append(list_pts[neighbours[ex_index[i]][1]])
-            ex_index.append(neighbours[ex_index[i]][1])
-        elif list_pts[neighbours[ex_index[i]][1]] == sorted_list[i - 1]:
-            """If the other neighbour is already on the sorted list, we add the first one."""
-            sorted_list.append(list_pts[neighbours[ex_index[i]][0]])
-            ex_index.append(neighbours[ex_index[i]][0])
-        else:
-            print("Error sorted_point.")
+        ex_index.append(neighbours[ex_index[i]][0])
+        sorted_list.append(list_pts[ex_index[i + 1]])
         # print('Ex_ind =', ex_index)
         # print('Sorted =', sorted_list)
         i = i + 1
@@ -170,7 +115,7 @@ def rectangle_flight_plan(point_1, point_2, d, d_width=None):
     fp_points, stops_points = rectangle_flight_plan(pt_1, pt_3, 20, 10)
 
     print('Number of points in the flight plan : ', len(fp_points), '\nNumber of stops points : ', len(stops_points))
-    
+
     plot_pts(fp_points, style='-', color='r', wait=True)
     plot_pts(stops_points, style='--', color='g', wait=False)'''
     d_length = d
@@ -201,6 +146,43 @@ def rectangle_flight_plan(point_1, point_2, d, d_width=None):
     return flight_points, stops
 
 
+def longest_distance(list_pts):
+    """Longest distance between two points. Return the 2 points and the distance."""
+    mat_dist = matrix_of_distances(list_pts)
+    longest_dist = np.max(mat_dist)
+    np_index = np.where(mat_dist == longest_dist)[0]
+    points = np_index.tolist()
+    return points, longest_dist
+
+
+def stops_on_a_line(point_1, point_2, dist):
+    """Calculate points on a line between pt1 and pt2 with a distance of dist between each stop. From pt1 to pt2."""
+    '''
+    pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
+           (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
+
+    sorted_pts = sorted_points(pts)
+    plot_pts(sorted_pts, style=':', wait=True)
+
+    (i_pt1, i_pt2), d_max = longest_distance(sorted_pts)
+
+    pt1, pt2 = sorted_pts[i_pt1], sorted_pts[i_pt2]
+
+    stops = stops_on_a_line(pt1, pt2, 25)
+    plot_pts(stops, style=':', color='g', wait=False)'''
+    stops = [point_1]
+    if point_1 != point_2:
+        dist_between_points = distance_in_meters(point_1, point_2)
+        number_of_stops = math.ceil(dist_between_points / dist)
+        # print(number_of_stops)
+        delta_latitude = (point_2[0] - point_1[0]) / number_of_stops
+        delta_longitude = (point_2[1] - point_1[1]) / number_of_stops
+        for i in range(1, number_of_stops):
+            stops.append((point_1[0] + i * delta_latitude, point_1[1] + i * delta_longitude))
+        stops.append(point_2)
+    return stops
+
+
 def plot_pts(list_pts, style='solid', color="b", wait=False):
     """Function to plot graphs with a list of points."""
     x = []
@@ -223,6 +205,7 @@ def point_on_with_x(point_1, point_2, x):
     b0 = point_1[1] - m * point_1[0]
     y = m * x + b0
     point = x, y
+    # print(on_this_segment)
     return on_this_segment, point
 
 
@@ -279,78 +262,13 @@ def point_on_with_vectors(point_0, vect_u, point_1, point_2, x_on_ld):
     pt1_on_ld = add_vect(point_0, vect_u, pt1_u)
     pt2_on_ld = add_vect(point_0, vect_u, pt2_u)  # plot_pts([O, pt1_on_ld, pt1, pt2_on_ld, pt2], color='y', wait=True)
     'Use of this relation : y = y1 + (x-x1)(y2-y1)/(x2-x1).'
-    directing_coefficient = (x_on_ld - pt1_on_ld[0]) / (pt2_on_ld[0] - pt1_on_ld[0])
+    if pt2_on_ld[0] - pt1_on_ld[0] != 0:
+        directing_coefficient = (x_on_ld - pt1_on_ld[0]) / (pt2_on_ld[0] - pt1_on_ld[0])
+    else:
+        directing_coefficient = np.inf
+    # directing_coefficient = (x_on_ld - pt1_on_ld[0]) / (pt2_on_ld[0] - pt1_on_ld[0])
     x_on_segment = point_1[0] + directing_coefficient * (point_2[0] - point_1[0])
     return point_on_with_x(point_1, point_2, x_on_segment)
-
-
-def create_flight_plan(list_pts, d, d_width=None):
-    """Return two lists, the first one with the different points of the flight plan and the second is the list of all
-    stops needed for the completed photo."""
-    '''Example :
-    pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
-           (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
-
-    sorted_pts = sorted_points(pts)
-    plot_pts(sorted_pts, style=':', wait=True)
-
-    plt.axis('equal')
-
-    fp_points, stops_points = create_flight_plan(pts, 5, 10)
-    print('create_flight_plan() :', len(fp_points), len(stops_points))
-
-    plot_pts(fp_points, style='-', color='r', wait=True)
-    plot_pts(stops_points, style='--', color='g', wait=False)'''
-    d_length = d
-    if d_width is None:
-        d_width = d
-    list_pts = sorted_points(list_pts)
-    neighbours = all_neighbours(list_pts)
-    (start, stop), max_dist = longest_distance(list_pts)
-    first_point = list_pts[start]
-    last_point = list_pts[stop]
-    vect_u, vect_v = vectorise(first_point, last_point, d, d_width)
-    up_segment = start, neighbours[start][0]
-    down_segment = start, neighbours[start][1]
-    flight_points = [first_point]
-    stops = [first_point]
-    for i in range(1, math.ceil(max_dist / d_length)):
-        x = add_vect(first_point, vect_u, i)[0]
-        up_on, point_up = point_on_with_vectors(first_point, vect_u,
-                                                list_pts[up_segment[0]], list_pts[up_segment[1]], x)
-        down_on, point_down = point_on_with_vectors(first_point, vect_u,
-                                                    list_pts[down_segment[0]], list_pts[down_segment[1]], x)
-        if not up_on:
-            '''If the point isn't  on the side of the area. We need to change the up_segment.'''
-            a, b = up_segment
-            if neighbours[b][0] == a:
-                up_next_neighbour = neighbours[b][1]
-            else:
-                up_next_neighbour = neighbours[b][0]
-            up_segment = b, up_next_neighbour
-            up_on, point_up = point_on_with_vectors(first_point, vect_u,
-                                                    list_pts[up_segment[0]], list_pts[up_segment[1]], x)
-        if not down_on:
-            '''If the point isn't  on the side of the area. We need to change the up_segment.'''
-            a, b = down_segment
-            if neighbours[b][0] == a:
-                down_next_neighbour = neighbours[b][1]
-            else:
-                down_next_neighbour = neighbours[b][0]
-            down_segment = b, down_next_neighbour
-            down_on, point_down = point_on_with_vectors(first_point, vect_u,
-                                                        list_pts[down_segment[0]], list_pts[down_segment[1]], x)
-        if i % 2 == 0:
-            stops += stops_on_a_line(point_up, point_down, d_width)
-            flight_points.append(point_up)
-            flight_points.append(point_down)
-        else:
-            stops += stops_on_a_line(point_down, point_up, d_width)
-            flight_points.append(point_down)
-            flight_points.append(point_up)
-    flight_points.append(list_pts[stop])
-    stops.append(list_pts[stop])
-    return flight_points, stops
 
 
 def vect(point_1, point_2):
@@ -405,8 +323,10 @@ def add_vect(pt, vector, nb=1):
     return ptx, pty
 
 
-if __name__ == "__main__":
-    """6 points of the drone lab in the EETAC in Castelldefels"""
+def create_flight_plan(list_pts_unsorted, d, d_width=None):
+    """Return two lists, the first one with the different points of the flight plan and the second is the list of all
+    stops needed for the completed photo."""
+    '''Example :
     pts = [(41.275827, 1.987712), (41.276788, 1.987478), (41.275843, 1.988352),
            (41.276965, 1.989399), (41.276264, 1.989522), (41.277231, 1.988347)]
 
@@ -417,6 +337,96 @@ if __name__ == "__main__":
 
     fp_points, stops_points = create_flight_plan(pts, 5, 10)
     print('create_flight_plan() :', len(fp_points), len(stops_points))
+
+    plot_pts(fp_points, style='-', color='r', wait=True)
+    plot_pts(stops_points, style='--', color='g', wait=False)'''
+    d_length = d
+    if d_width is None:
+        d_width = d
+    list_pts = sorted_points(list_pts_unsorted)
+    neighbours = all_neighbours(list_pts)
+    (start, stop), max_dist = longest_distance(list_pts)
+    first_point = list_pts[start]
+    last_point = list_pts[stop]
+    vect_u, vect_v = vectorise(first_point, last_point, d, d_width)
+    up_segment = start, neighbours[start][0]
+    down_segment = start, neighbours[start][1]
+    flight_points = [first_point]
+    stops = [first_point]
+    for i in range(1, math.ceil(max_dist / d_length)):
+        x = add_vect(first_point, vect_u, i)[0]
+        up_on, point_up = point_on_with_vectors(first_point, vect_u,
+                                                list_pts[up_segment[0]], list_pts[up_segment[1]], x)
+        down_on, point_down = point_on_with_vectors(first_point, vect_u,
+                                                    list_pts[down_segment[0]], list_pts[down_segment[1]], x)
+        # print('Loop step on_up : ', up_on)
+        if not up_on:
+            '''If the point isn't  on the side of the area. We need to change the up_segment.'''
+            # print('In the loop because False')
+            a, b = up_segment
+            if neighbours[b][0] == a:
+                # print('if')
+                up_next_neighbour = neighbours[b][1]
+            else:
+                # print('else')
+                up_next_neighbour = neighbours[b][0]
+            up_segment = b, up_next_neighbour
+            up_on, point_up = point_on_with_vectors(first_point, vect_u,
+                                                    list_pts[up_segment[0]], list_pts[up_segment[1]], x)
+            # print('Test step on_up : ', up_on)
+        if not down_on:
+            '''If the point isn't on the side of the area. We need to change the down_segment.'''
+            a, b = down_segment
+            if neighbours[b][0] == a:
+                down_next_neighbour = neighbours[b][1]
+            else:
+                down_next_neighbour = neighbours[b][0]
+            down_segment = b, down_next_neighbour
+            down_on, point_down = point_on_with_vectors(first_point, vect_u,
+                                                        list_pts[down_segment[0]], list_pts[down_segment[1]], x)
+        if i % 2 == 0:
+            stops += stops_on_a_line(point_up, point_down, d_width)
+            flight_points.append(point_up)
+            flight_points.append(point_down)
+        else:
+            stops += stops_on_a_line(point_down, point_up, d_width)
+            flight_points.append(point_down)
+            flight_points.append(point_up)
+    flight_points.append(list_pts[stop])
+    stops.append(list_pts[stop])
+    return flight_points, stops
+
+
+if __name__ == "__main__":
+    """6 points of the drone lab in the EETAC in Castelldefels"""
+    pts = [(41.275827, 1.987712), (41.277231, 1.988347), (41.275716, 1.988816),
+           (41.276965, 1.989399), (41.276264, 1.989522), (41.276788, 1.987478)]  #
+
+    for i, point in enumerate(pts):
+        plt.text(point[0], point[1], str(i))
+
+    plt.axis('equal')
+
+    print('Neighbours unsorted list : \n', all_neighbours(pts))
+
+    plot_pts(pts, style='-', color='y', wait=True)
+
+    sorted_pts = sorted_points(pts)
+    print('Sorted list of points : \n', sorted_pts)
+    print('Neighbours sorted list : \n', all_neighbours(sorted_pts))
+
+    plot_pts(sorted_pts, style=':', color='b', wait=True)
+
+    (i_pt1, i_pt2), d_max = longest_distance(sorted_pts)
+
+    pt1, pt2 = sorted_pts[i_pt1], sorted_pts[i_pt2]
+
+    stops = stops_on_a_line(pt1, pt2, 25)
+    plot_pts(stops, style=':', color='g', wait=True)
+
+    fp_points, stops_points = create_flight_plan(pts, 15, 30)
+    print('Number of points in the flight plan :', len(fp_points),
+          '\nNumber of points in the stops point list : ', len(stops_points))
 
     plot_pts(fp_points, style='-', color='r', wait=True)
     plot_pts(stops_points, style='--', color='g', wait=False)
