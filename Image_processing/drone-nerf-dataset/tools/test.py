@@ -1,26 +1,14 @@
 import numpy as np
-import sys
-from pathlib import Path
-import click
-import util
-from collections import namedtuple
-import pprint
-from xml.etree import ElementTree as ET
+import cv2
+import glob
+import imutils
+
+image_paths = glob.glob('D:\PycharmProject\Master-Thesis\Image_processing\panorama\images_1\*.jpg')
+images = []
 
 
-def read(xml_file):
-    """
-        Parse the cameras.xml given a file name
-        Args:
-            xml_file (str): xml file path
-        """
-    xml = xml_file
-    doc = ET.parse(xml_file)
-    root = doc.getroot()
-    for sensor in root.findall('./sensors/sensor'):
-        print(sensor)
-
-    return xml
-
-
-read('doc.xml')
+for image in image_paths:
+    img = cv2.imread(image)
+    images.append(img)
+    cv2.imshow("Image", img)
+    cv2.waitKey(0)
