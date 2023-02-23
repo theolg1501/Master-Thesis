@@ -21,7 +21,6 @@ __doc__ += '\n' + parser.format_help()
 
 def main():
     args = parser.parse_args()
-    print(type(args.img))
 
     # read input path of images or file which contains images
     imgs = []
