@@ -5,41 +5,58 @@ import cv2
 import numpy as np
 import two_stitching_util
 
-parser = argparse.ArgumentParser(prog='two_stitching.py', description='Two_stitching sample.')
-
+parser = argparse.ArgumentParser(prog='two_stitching.py', description='Stitching images two by two.')
 parser.add_argument('img', nargs='+', help='input images')
 
 args = parser.parse_args()
 imgs = []
-i = 0
-max_imgs = len(imgs)
+imgs_tmp = []
+row = 4
+column = 2
 
-for img_name in args.img:
-    imgs = [cv2.imread(file) for file in sorted(glob.glob(args.img[0]))]
+input_imgs = [cv2.imread(file) for file in glob.glob(args.img[0])]
+print(len(input_imgs))
 
 
-def stitch_loop(imgs):
-    for index, image in enumerate(imgs):
-        scale_percent = 10  # percent of original size
-        width = int(image.shape[1] * scale_percent / 100)
-        height = int(image.shape[0] * scale_percent / 100)
-        dim = (width, height)
+def get_dim(img, scale):
+    width = int(img.shape[1] * scale)
+    height = int(img.shape[0] * scale)
+    dim = (width, height)
+    return dim
 
-        if index != num_imags-1:
-            imgs.append(two_stitching_util.main(cv2.resize(imgs[index], dim, interpolation=cv2.INTER_AREA),
-                                            cv2.resize(imgs[index+1], dim, interpolation=cv2.INTER_AREA), index))
-            print(len(imgs))
+
+def resize(img, dim):
+    return cv2.resize(img, dim, interpolation=cv2.INTER_LINEAR_EXACT)
+
+
+def stitch_loop(images, images_tmp, pos):  # max & pos are (row, column)
+    panorama1 = two_stitching_util.main(images[0], images[1])
+    images_tmp.append(panorama1)
+    for index, image in enumerate(images):
+        if 1 < index:
+            panorama2 = two_stitching_util.main(images_tmp[pos], image)
+            images_tmp[pos] = panorama2
         else:
-            del (imgs[0:num_imags])
-            print(len(imgs))
-            break
-
-num_imags = len(imgs)
-while i != max_imgs-1:
-    stitch_loop(imgs)
-    i+=1
-if i == max_imgs-1:
-    for image in imgs:
-        cv2.imshow('panorama', image)
+            continue
+    return images_tmp
 
 
+def main():
+    for image in input_imgs:
+        imgs.append(resize(image, get_dim(image, 0.1)))
+    for i in range(0, column):
+        stitch_loop(imgs[row * i:row * (i + 1)], imgs_tmp, i)
+
+    cv2.imshow('panorama', two_stitching_util.main(imgs_tmp[0], imgs_tmp[1]))
+    cv2.waitKey(0)
+    # print(len(imgs_tmp))
+    # stitch_loop(imgs_tmp, imgs_tmp, column)
+    #
+    #
+    # for i in imgs_tmp:
+    #     cv2.imshow('panorama', i)
+    #     cv2.waitKey(0)
+
+
+if __name__ == '__main__':
+    main()
