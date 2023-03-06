@@ -112,7 +112,7 @@ def main(image1, image2):
     transformedCorners2 = cv2.perspectiveTransform(corners2, homography)
 
     offset = (0, 0)
-    size = (1000, 800)
+    size = (image1.shape[1], image2.shape[0])
 
     # print('Size of the stitched panorama: {0}'.format(size))
     # print('Offset of the stitched panorama: {0}'.format(offset))

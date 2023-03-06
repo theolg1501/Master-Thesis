@@ -3,11 +3,11 @@ import numpy as np
 import sys
 
 
-class Image_Stitching():
+class Image_Stitching:
     def __init__(self):
         self.ratio = 0.85
         self.min_match = 10
-        self.sift = cv2.xfeatures2d.SIFT_create()
+        self.sift = cv2.SIFT_create()
         self.smoothing_window_size = 800
 
     def registration(self, img1, img2):
@@ -77,4 +77,8 @@ def main(img1, img2):
     final = Image_Stitching().blending(img1, img2)
     return final
 
-cv2.imshow('panorama',main('D:\PycharmProject\Master-Thesis\Image_processing\panorama\images_2\4.JPG', 'D:\PycharmProject\Master-Thesis\Image_processing\panorama\images_2\5.JPG'))
+
+cv2.imshow('panorama', main('/Users/chang/Documents/GitHub/Master-Thesis/Image_processing/panorama/images_2/1.JPG',
+                            '/Users/chang/Documents/GitHub/Master-Thesis/Image_processing/panorama/images_2/2.JPG'))
+cv2.waitKey(0)
+
