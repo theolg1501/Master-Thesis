@@ -75,9 +75,8 @@ def main(image1, image2):
     # Print, display and save the result
     print('{0} features matched'.format(len(points1)))
     match = draw_matches(image1, image2, points1, points2)
-    # cv2.imwrite('Matching.jpg', match)
-    # cv2.imshow('Matching', match)
-    # cv2.waitKey(0)
+    cv2.imshow('Matching', match)
+    cv2.waitKey(0)
 
     ### 3. ESTIMATE A HOMOGRAPHY MATRIX
 
@@ -112,7 +111,7 @@ def main(image1, image2):
     transformedCorners2 = cv2.perspectiveTransform(corners2, homography)
 
     offset = (0, 0)
-    size = (image1.shape[1], image2.shape[0])
+    size = (1500, 1500)
 
     # print('Size of the stitched panorama: {0}'.format(size))
     # print('Offset of the stitched panorama: {0}'.format(offset))

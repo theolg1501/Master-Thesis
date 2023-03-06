@@ -72,13 +72,7 @@ class Image_Stitching:
 
 
 def main(img1, img2):
-    img1 = cv2.imread(img1)
-    img2 = cv2.imread(img2)
     final = Image_Stitching().blending(img1, img2)
     return final
 
-
-cv2.imshow('panorama', main('/Users/chang/Documents/GitHub/Master-Thesis/Image_processing/panorama/images_2/1.JPG',
-                            '/Users/chang/Documents/GitHub/Master-Thesis/Image_processing/panorama/images_2/2.JPG'))
-cv2.waitKey(0)
 
