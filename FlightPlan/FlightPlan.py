@@ -81,6 +81,7 @@ def sorted_points(list_pts):
     plot_pts(pts, style='-', color='y', wait=True)
     sorted_pts = sorted_points(pts)
     plot_pts(sorted_pts, style=':', color='b', wait=True)'''
+    # list_pts = sorted(list_pts)
     nb_pts = len(list_pts)
     neighbours = all_neighbours(list_pts)
     sorted_list = [list_pts[0], list_pts[neighbours[0][0]]]  # the first point and the closest neighbour
@@ -188,8 +189,8 @@ def plot_pts(list_pts, style='solid', color="b", wait=False):
     x = []
     y = []
     for pt in list_pts:
-        x.append(pt[0])  # longitude
-        y.append(pt[1])  # latitude
+        x.append(pt[1])  # latitude
+        y.append(pt[0])  # longitude
     plt.plot(x, y, linestyle=style, color=color)
     if not wait:
         plt.show()
@@ -311,12 +312,16 @@ def vectorise(point_1, point_2, d, d_width=None):
     return vect_u, vect_v
 
 
-def add_vect(pt, vector, nb=1):
+def add_vect(pt, vector, nb=1, substract=False):
     """Return the point. After having added nb times the vector."""
     value_x = nb * vector[0]
     value_y = nb * vector[1]
-    ptx = pt[0] + value_x
-    pty = pt[1] + value_y
+    if substract:
+        ptx = pt[0] - value_x
+        pty = pt[1] - value_y
+    else:
+        ptx = pt[0] + value_x
+        pty = pt[1] + value_y
     # for i in range(0, nb):
     #     ptx += vect[0]
     #     pty += vect[1]
@@ -346,15 +351,18 @@ def create_flight_plan(list_pts_unsorted, d, d_width=None):
     list_pts = sorted_points(list_pts_unsorted)
     neighbours = all_neighbours(list_pts)
     (start, stop), max_dist = longest_distance(list_pts)
+    # print('start : ', start, 'stop : ', stop)
+    plt.text(list_pts[start][0], list_pts[start][1], 'start')
     first_point = list_pts[start]
     last_point = list_pts[stop]
     vect_u, vect_v = vectorise(first_point, last_point, d, d_width)
+    same_way = not point_on_with_x(list_pts[start], list_pts[stop], add_vect(list_pts[start], vect_u)[0])[0]
     up_segment = start, neighbours[start][0]
     down_segment = start, neighbours[start][1]
     flight_points = [first_point]
     stops = [first_point]
     for i in range(1, math.ceil(max_dist / d_length)):
-        x = add_vect(first_point, vect_u, i)[0]
+        x = add_vect(first_point, vect_u, i, same_way)[0]
         up_on, point_up = point_on_with_vectors(first_point, vect_u,
                                                 list_pts[up_segment[0]], list_pts[up_segment[1]], x)
         down_on, point_down = point_on_with_vectors(first_point, vect_u,
@@ -399,8 +407,14 @@ def create_flight_plan(list_pts_unsorted, d, d_width=None):
 
 if __name__ == "__main__":
     """6 points of the drone lab in the EETAC in Castelldefels"""
-    pts = [(41.275827, 1.987712), (41.277231, 1.988347), (41.275716, 1.988816),
-           (41.276965, 1.989399), (41.276264, 1.989522), (41.276788, 1.987478)]  #
+    pts = [(41.27623222392269, 1.9878920541219982), (41.276792608804385, 1.9888735998061693),
+           (41.2766353789994, 1.9879724804139847), (41.276020566510596, 1.9884711234243069),
+           (41.276631347460956, 1.9893933449057677), (41.27626044485909, 1.989109172007395)]
+    '''
+    working points : [(41.275827, 1.987712), (41.277231, 1.988347), (41.275716, 1.988816),
+    (41.276965, 1.989399), (41.276264, 1.989522), (41.276788, 1.987478)]
+    
+    '''
 
     for i, point in enumerate(pts):
         plt.text(point[0], point[1], str(i))
@@ -424,7 +438,7 @@ if __name__ == "__main__":
     stops = stops_on_a_line(pt1, pt2, 25)
     plot_pts(stops, style=':', color='g', wait=True)
 
-    fp_points, stops_points = create_flight_plan(pts, 15, 30)
+    fp_points, stops_points = create_flight_plan(pts, 20, 50)
     print('Number of points in the flight plan :', len(fp_points),
           '\nNumber of points in the stops point list : ', len(stops_points))
 
