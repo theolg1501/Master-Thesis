@@ -6,10 +6,6 @@ import cv2
 import numpy as np
 
 
-
-
-
-### Connects corresponding features in the two images using yellow lines
 def draw_matches(img1, img2, pts1, pts2):
     # Put images side-by-side into 'image'
     (h1, w1) = img1.shape[:2]
@@ -24,7 +20,8 @@ def draw_matches(img1, img2, pts1, pts2):
 
     return matches_image
 
-def main(image1, image2, d):
+
+def main(image1, image2):
     ### MAIN PROGRAM
 
     ### 1. FEATURE DETECTION AND DESCRIPTION
@@ -41,7 +38,7 @@ def main(image1, image2, d):
 
     # Print, display and save the result
     print('{0} features detected in image1'.format(len(keypoints1)))
-    # features1 = cv2.drawKeypoints(gray1, keypoints1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    features1 = cv2.drawKeypoints(gray1, keypoints1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     # cv2.imwrite('Features1.jpg', features1)
     # cv2.imshow('Features 1', features1)
     # cv2.waitKey(0)
@@ -54,7 +51,7 @@ def main(image1, image2, d):
 
     # Print, display and save the result
     print('{0} features detected in image2'.format(len(keypoints2)))
-    # features2 = cv2.drawKeypoints(gray2, keypoints2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    features2 = cv2.drawKeypoints(gray2, keypoints2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     # cv2.imwrite('Features2.jpg', features2)
     # cv2.imshow('Features 2', features2)
     # cv2.waitKey(0)
@@ -77,10 +74,9 @@ def main(image1, image2, d):
 
     # Print, display and save the result
     print('{0} features matched'.format(len(points1)))
-    # match = draw_matches(image1, image2, points1, points2)
-    # cv2.imwrite('Matching.jpg', match)
-    # cv2.imshow('Matching', match)
-    # cv2.waitKey(0)
+    match = draw_matches(image1, image2, points1, points2)
+    cv2.imshow('Matching', match)
+    cv2.waitKey(0)
 
     ### 3. ESTIMATE A HOMOGRAPHY MATRIX
 
@@ -102,8 +98,8 @@ def main(image1, image2, d):
     width2 = image2.shape[1]
     corners2 = np.float32([[[0, 0], [0, height2 - 1], [width2 - 1, height2 - 1], [width2 - 1, 0]]])
     transformedCorners2 = cv2.perspectiveTransform(corners2, homography)
-    print("TransformedCorners2:")
-    print(transformedCorners2)
+    # print("TransformedCorners2:")
+    # print(transformedCorners2)
 
     # Calculate the size and offset of the stitched panorama.
     # offset is the position of image 1 relative to the top-left corner of the stitched panorama
@@ -115,22 +111,23 @@ def main(image1, image2, d):
     transformedCorners2 = cv2.perspectiveTransform(corners2, homography)
 
     offset = (0, 0)
-    size = (1600, 600)
+    size = (1500, 1500)
 
-    print('Size of the stitched panorama: {0}'.format(size))
-    print('Offset of the stitched panorama: {0}'.format(offset))
+    # print('Size of the stitched panorama: {0}'.format(size))
+    # print('Offset of the stitched panorama: {0}'.format(offset))
 
     # Update the homography to shift by the offset
     homography[0:2, 2] += offset
-    print("Homography:")
-    print(homography)
+    # print("Homography:")
+    # print(homography)
 
     ## 4.2 Combine images into a panorama
+
 
     # Transform image 2
     panorama = cv2.warpPerspective(image2, homography, size)
     # cv2.imshow('Warped image 2', panorama)
-    cv2.waitKey(0)
+    # cv2.waitKey(0)
 
     # Copy image 1 to panorama
     (height1, width1) = image1.shape[0:2]
@@ -142,6 +139,7 @@ def main(image1, image2, d):
     # cv2.imwrite('D:\PycharmProject\Master-Thesis\Image_processing\panorama\images_temp\Panoramatemp_%d.jpg'%d, panorama)
     # Close all windows
     # cv2.destroyAllWindows()
+    print('------------')
     return panorama
 
 # scale_percent = 10 # percent of original size
