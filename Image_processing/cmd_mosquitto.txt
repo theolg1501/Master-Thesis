@@ -1,0 +1,31 @@
+#  This is for autopilot:
+
+.\mosquitto_pub -h '10.10.10.201' -t 'cameraService/autopilotService/connect' -m 'connect' -i 'Porter'
+
+.\mosquitto_pub -h '10.10.10.201' -t 'cameraService/autopilotService/disconnect' -m 'disconnect' -i 'Porter'
+
+.\mosquitto_pub -h '10.10.10.201' -t 'cameraService/autopilotService/takeOff' -m 'take off' -i 'Porter'
+
+.\mosquitto_pub -h '10.10.10.201' -t 'cameraService/autopilotService/returnToLaunch' -m 'RTL' -i 'Porter'
+
+.\mosquitto_pub -h '10.10.10.201' -t 'cameraService/autopilotService/armDrone' -m 'arm' -i 'Porter'
+
+.\mosquitto_pub -h '10.10.10.201' -t 'cameraService/autopilotService/disarmDrone' -m 'disarm' -i 'Porter'
+
+.\mosquitto_pub -h '10.10.10.201' -t 'cameraService/autopilotService/connect' -m 'connect' -i 'Porter'
+
+.\mosquitto_pub -h '10.10.10.201' -t 'cameraService/autopilotService/land' -m 'land' -i 'Porter'
+
+.\mosquitto_pub -h '10.10.10.201' -t 'cameraService/autopilotService/executeFlightPlan' -m '/home/ubuntu/RaspiRemote/project_1/waypoints.json' -i 'Porter'
+
+-----------------------------------------------
+#  This is for camera:
+
+.\mosquitto_pub -h '10.10.10.201' -t 'autopilotService/cameraService/executePicturesPlan' -m '/home/ubuntu/RaspiRemote/project_1/waypoints_photos.json' -i 'Porter'
+
+.\mosquitto_pub -h '10.10.10.201' -t 'autopilotService/cameraService/takePicturesInstant' -m 'take a picture every 5 seconds'
+
+-----------------------------------------------
+#  Test
+
+.\mosquitto_sub -h '10.10.10.201' -t '+/telemetryInfo' -i 'Receiver' -p '8000'

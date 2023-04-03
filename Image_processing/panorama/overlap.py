@@ -5,13 +5,13 @@ import numpy as np
 HFOV = 62.2  # degrees
 VFOV = 48.8  # degrees
 
-res_x = 3280  # pixels
-res_y = 2464  # pixels
+res_x = 1920  # pixels
+res_y = 1080  # pixels
 
 f = 3.04  # mm
 
 # Different altitude variable
-ALT = 8  # meters
+ALT = 6  # meters
 SPEED = 1.8  # m/s
 INTERVAL = 2  # second(s)
 AREA_X = 35  # meters
@@ -38,8 +38,13 @@ def row_col(front, side, area_x, area_y, x, y):
 # Ground area covered
 y, x = area_covered(VFOV, HFOV, ALT)
 
-GSD = x / 3280 * 100  # cm/pixel
+GSD = x / 1920 * 100  # cm/pixel
 
 front, side = overlapping(x, y, SPEED, INTERVAL)
 
-print(GSD)
+print('GSD:'+str(GSD))
+print('Area_x: '+str(x))
+print('Area_y: '+str(y))
+
+
+
