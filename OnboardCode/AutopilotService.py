@@ -27,7 +27,7 @@ def arm():
     print(" Armed")
 
 def take_off(a_target_altitude, manualControl):
-    global state
+    global state 
     vehicle.simple_takeoff(a_target_altitude)
     while True:
         print(" Altitude: ", vehicle.location.global_relative_frame.alt)
