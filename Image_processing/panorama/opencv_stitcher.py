@@ -12,11 +12,11 @@ parser.add_argument('--mode',
                     help='Determines configuration of stitcher. The default is `PANORAMA` (%d), '
                          'mode suitable for creating photo panoramas. Option `SCANS` (%d) is suitable '
                          'for stitching materials under affine transformation, such as scans.' % modes)
-parser.add_argument('--output', default='result_1.jpg',
-                    help='Resulting image. The default is `result_1.jpg`.')
+parser.add_argument('--output', default='result_1905_4.jpg',
+                    help='Resulting image. The default is `result_1905_4.jpg`.')
 parser.add_argument('img', nargs='+', help='input images')
 
-__doc__ += '\n' + parser.format_help()
+# __doc__ += '\n' + parser.format_help()
 
 
 def main():
