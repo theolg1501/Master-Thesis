@@ -40,8 +40,8 @@ def main(image1, image2):
     print('{0} features detected in image1'.format(len(keypoints1)))
     features1 = cv2.drawKeypoints(gray1, keypoints1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     # cv2.imwrite('Features1.jpg', features1)
-    # cv2.imshow('Features 1', features1)
-    # cv2.waitKey(0)
+    cv2.imshow('Features 1', features1)
+    cv2.waitKey(0)
 
     ### 1.2 Extract keypoints and descriptors of gray2
 
@@ -53,11 +53,10 @@ def main(image1, image2):
     print('{0} features detected in image2'.format(len(keypoints2)))
     features2 = cv2.drawKeypoints(gray2, keypoints2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     # cv2.imwrite('Features2.jpg', features2)
-    # cv2.imshow('Features 2', features2)
-    # cv2.waitKey(0)
+    cv2.imshow('Features 2', features2)
+    cv2.waitKey(0)
 
     ### 2. MATCH DESCRIPTORS
-
 
     # create BFMatcher object
     bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
@@ -98,8 +97,8 @@ def main(image1, image2):
     width2 = image2.shape[1]
     corners2 = np.float32([[[0, 0], [0, height2 - 1], [width2 - 1, height2 - 1], [width2 - 1, 0]]])
     transformedCorners2 = cv2.perspectiveTransform(corners2, homography)
-    # print("TransformedCorners2:")
-    # print(transformedCorners2)
+    print("TransformedCorners2:")
+    print(transformedCorners2)
 
     # Calculate the size and offset of the stitched panorama.
     # offset is the position of image 1 relative to the top-left corner of the stitched panorama
@@ -113,27 +112,26 @@ def main(image1, image2):
     offset = (0, 0)
     size = (1500, 1500)
 
-    # print('Size of the stitched panorama: {0}'.format(size))
-    # print('Offset of the stitched panorama: {0}'.format(offset))
+    print('Size of the stitched panorama: {0}'.format(size))
+    print('Offset of the stitched panorama: {0}'.format(offset))
 
     # Update the homography to shift by the offset
     homography[0:2, 2] += offset
-    # print("Homography:")
-    # print(homography)
+    print("Homography:")
+    print(homography)
 
     ## 4.2 Combine images into a panorama
 
-
     # Transform image 2
     panorama = cv2.warpPerspective(image2, homography, size)
-    # cv2.imshow('Warped image 2', panorama)
-    # cv2.waitKey(0)
+    cv2.imshow('Warped image 2', panorama)
+    cv2.waitKey(0)
 
     # Copy image 1 to panorama
     (height1, width1) = image1.shape[0:2]
     panorama[offset[1]: offset[1] + height1, offset[0]: offset[0] + width1] = image1
-    # cv2.imshow('Panorama', panorama)
-    # cv2.waitKey(0)
+    cv2.imshow('Panorama', panorama)
+    cv2.waitKey(0)
 
     # Save panorama
     # cv2.imwrite('D:\PycharmProject\Master-Thesis\Image_processing\panorama\images_temp\Panoramatemp_%d.jpg'%d, panorama)
@@ -142,9 +140,12 @@ def main(image1, image2):
     print('------------')
     return panorama
 
-# scale_percent = 10 # percent of original size
-# width = int(3024 * scale_percent / 100)
-# height = int(4032 * scale_percent / 100)
-# dim = (width, height)
-# main(cv2.resize(cv2.imread('D:\PycharmProject\Master-Thesis\Image_processing\panorama\images_2\IMG_2366.JPG'), dim, interpolation = cv2.INTER_AREA),
-#      cv2.resize(cv2.imread('D:\PycharmProject\Master-Thesis\Image_processing\panorama\images_2\IMG_2367.JPG'), dim, interpolation = cv2.INTER_AREA), 1)
+
+scale_percent = 10  # percent of original size
+width = int(1920 * scale_percent / 100)
+height = int(1080 * scale_percent / 100)
+dim = (width, height)
+main(cv2.resize(cv2.imread('D:\Documents\GitHub\Master-Thesis\Image_processing\panorama/test_0606/2/5.jpg'), dim,
+                interpolation=cv2.INTER_AREA),
+     cv2.resize(cv2.imread('D:\Documents\GitHub\Master-Thesis\Image_processing\panorama/test_0606/2/6.jpg'), dim,
+                interpolation=cv2.INTER_AREA))

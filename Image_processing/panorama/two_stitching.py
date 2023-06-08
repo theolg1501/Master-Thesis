@@ -14,8 +14,8 @@ parser.add_argument('img', nargs='+', help='input images')
 args = parser.parse_args()
 imgs = []
 imgs_tmp = []
-row = 1
-column = 2
+row = 20
+column = 1
 
 input_imgs = [cv2.imread(file) for file in glob.glob(args.img[0])]
 print(len(input_imgs))
