@@ -59,7 +59,15 @@ def main(image1, image2):
     ### 2. MATCH DESCRIPTORS
 
     # create BFMatcher object
-    bf = cv2.BFMatcher(cv2.NORM_L1, crossCheck=True)
+    bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=True)
+
+    # Or creating a FLANN based matcher
+    # FLANN_INDEX_KDTREE = 1
+    # index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    # search_params = dict(checks=50)
+    #
+    # flann = cv2.FlannBasedMatcher(index_params, search_params)
+
 
     # Match descriptors
     matches = bf.match(descriptors1, descriptors2)
